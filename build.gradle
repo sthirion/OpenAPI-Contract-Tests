@@ -1,0 +1,52 @@
+apply plugin: 'java'
+apply plugin: 'jacoco'
+
+// tag::repositories[]
+repositories { 
+    mavenCentral() 
+}
+// end::repositories[]
+
+// tag::jar[]
+jar {
+    baseName = 'openapi-contract-tests'
+    version =  '0.1.0'
+}
+// end::jar[]
+
+// tag::dependencies[]
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile (
+            "com.fasterxml.jackson.core:jackson-core:2.9.8"
+    )
+    testCompile (
+            "junit:junit:4.12",
+            "org.mockito:mockito-core:2.26.0",
+            "io.swagger.parser.v3:swagger-parser:2.0.18"
+    )
+}
+// end::dependencies[]
+
+// tag::wrapper[]
+// end::wrapper[]
+
+// tag::tasks[]
+task copyTestDeps(type: Copy) {
+    from(configurations.compile + configurations.testCompile) {
+        include '*.dll'
+        include '*.dylib'
+        include '*.so'
+    }
+    into 'build/libs'
+}
+// end::tasks[]
+
+test {
+    dependsOn copyTestDeps
+    systemProperty "java.library.path", "build/libs"
+}
+
+test.finalizedBy jacocoTestReport
