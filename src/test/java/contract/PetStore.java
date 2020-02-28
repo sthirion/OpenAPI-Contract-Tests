@@ -8,10 +8,10 @@ import util.TestUtils;
 import java.io.IOException;
 import java.util.HashMap;
 
-public class GSA {
+public class PetStore {
 
-    // Contract tests for https://cityPairsPrototypeAPI.app.cloud.gov/travel/citypairs/v0
-    private final static String openAPIUrl = "https://gsa.github.io/api-documentation-template/api-docs/console/citypairs.json";
+    // Contract tests for https://swagger.developerhub.io/swagger-petstore/ref
+    private final static String openAPIUrl = "https://petstore.swagger.io/v2/swagger.json";
     private OpenAPI apiSpecDocument;
 
     @Before
@@ -20,13 +20,12 @@ public class GSA {
     }
 
     @Test
-    public void airfares() throws ClassNotFoundException {
-        String modelClass = "model.gsa.Airfare";
-        String endpoint = "/airfares";
+    public void findPetByStatus() throws ClassNotFoundException {
+        String modelClass = "model.petstore.Pet";
+        String endpoint = "/pet/findByStatus";
 
         HashMap<String, String> parametersUsed = new HashMap<>();
-        parametersUsed.put("award_year", "String");
-        parametersUsed.put("origin_airport_abbrev", "String");
+        parametersUsed.put("status", "String");
 
         // VERIFY QUERYSTRING
         TestUtils.verifyEndpoint(apiSpecDocument, endpoint, parametersUsed);
