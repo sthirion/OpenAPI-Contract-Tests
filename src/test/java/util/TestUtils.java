@@ -2,9 +2,11 @@ package util;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
 import io.swagger.v3.oas.models.media.IntegerSchema;
 import io.swagger.v3.oas.models.media.NumberSchema;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.parser.OpenAPIV3Parser;
@@ -58,7 +60,14 @@ public abstract class TestUtils {
     private static boolean verifyParameter(String key, String type, List<Parameter> parameterList) {
         AtomicBoolean isFound = new AtomicBoolean(false);
         parameterList.forEach(parameter -> {
-            if(parameter.getName().equals(key) && parameter.getSchema().getType().equalsIgnoreCase(type)) isFound.set(true);
+            if(parameter.getName().equals(key)) {
+                if (parameter.getSchema().getType().toLowerCase() == "array") {
+                    if (((ArraySchema) parameter.getSchema()).getItems().getType().equalsIgnoreCase(type))
+                        isFound.set(true);
+                } else {
+                    if (parameter.getSchema().getType().equalsIgnoreCase(type)) isFound.set(true);
+                }
+            }
         });
         return isFound.get();
     }
@@ -78,6 +87,8 @@ public abstract class TestUtils {
     private static boolean verifyProperty(String key, String type, Map model) {
         AtomicBoolean isFound = new AtomicBoolean(false);
         model.forEach((k, v) -> { if (k.equals(key)) {
+
+        //TODO: rewrite so it is based on the type of the schema, so we can dig deeper in the case of arrays and objects
             switch (type.toLowerCase()) {
                 case "string":
                     if (((StringSchema) v).getType().equalsIgnoreCase(type)) isFound.set(true);
@@ -91,7 +102,14 @@ public abstract class TestUtils {
                 case "datetime":
                     if (((DateTimeSchema) v).getFormat().equalsIgnoreCase("date-time")) isFound.set(true);
                     break;
-            }        }
+                case "arraylist":
+                    if (((ArraySchema) v).getType().equalsIgnoreCase("array")) isFound.set(true);
+                    break;
+                    default:
+                        if (((Schema<Object>) v).get$ref().equalsIgnoreCase("#/components/schemas/"+type.toLowerCase())) isFound.set(true);
+
+                }
+            }
         });
         return isFound.get();
     }
