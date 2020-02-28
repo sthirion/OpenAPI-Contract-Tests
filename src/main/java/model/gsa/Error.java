@@ -1,4 +1,4 @@
-package model;
+package model.gsa;
 
 public class Error {
     private String message;
