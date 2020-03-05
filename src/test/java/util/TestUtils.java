@@ -3,13 +3,10 @@ package util;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.ArraySchema;
-import io.swagger.v3.oas.models.media.DateTimeSchema;
-import io.swagger.v3.oas.models.media.IntegerSchema;
-import io.swagger.v3.oas.models.media.NumberSchema;
 import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.parser.OpenAPIV3Parser;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -86,28 +83,26 @@ public abstract class TestUtils {
 
     private static boolean verifyProperty(String key, String type, Map model) {
         AtomicBoolean isFound = new AtomicBoolean(false);
-        model.forEach((k, v) -> { if (k.equals(key)) {
+        model.forEach((k, v) -> {
+            if (k.equals(key)) {
+                Schema<?> value = (Schema<?>) v;
 
-        //TODO: rewrite so it is based on the type of the schema, so we can dig deeper in the case of arrays and objects
-            switch (type.toLowerCase()) {
-                case "string":
-                    if (((StringSchema) v).getType().equalsIgnoreCase(type)) isFound.set(true);
-                    break;
-                case "integer":
-                    if (((IntegerSchema) v).getType().equalsIgnoreCase(type)) isFound.set(true);
-                    break;
-                case "double": case "float":
-                    if (((NumberSchema) v).getFormat().equalsIgnoreCase(type)) isFound.set(true);
-                    break;
-                case "datetime":
-                    if (((DateTimeSchema) v).getFormat().equalsIgnoreCase("date-time")) isFound.set(true);
-                    break;
-                case "arraylist":
-                    if (((ArraySchema) v).getType().equalsIgnoreCase("array")) isFound.set(true);
-                    break;
+                switch (value.getClass().getSimpleName()) {
+                    case "ArraySchema":
+                        isFound.set(value.getType().equalsIgnoreCase("array"));
+                        break;
+                    case "DateTimeSchema":
+                        isFound.set(value.getFormat().equalsIgnoreCase("date-time"));
+                        break;
+                    case "IntegerSchema":
+                    case "StringSchema":
+                        isFound.set(value.getType().equalsIgnoreCase(type));
+                        break;
+                    case "NumberSchema":
+                        isFound.set(value.getFormat().equalsIgnoreCase(type));
+                        break;
                     default:
-                        if (((Schema<Object>) v).get$ref().equalsIgnoreCase("#/components/schemas/"+type.toLowerCase())) isFound.set(true);
-
+                        throw new NotImplementedException(String.format("%s not implemented", value.getClass().getSimpleName()));
                 }
             }
         });
